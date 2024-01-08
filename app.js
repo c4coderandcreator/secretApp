@@ -96,29 +96,28 @@ app.get("/register", function(req, res){
     res.render("register");
 });
 
-app.get("/secrets", function(req, res){
-    if (req.isAuthenticated()){
-        res.render("secrets");
+app.get("/secrets", function(req, res) {
+    if (req.isAuthenticated()) {
+        // User is authenticated, retrieve and render secrets
+        User.find({"secret": {$ne: null}})
+            .then(foundUsers => {
+                if (foundUsers && foundUsers.length > 0) {
+                    res.render("secrets", {usersWithSecrets: foundUsers});
+                } else {
+                    // No users with non-null secrets found
+                    res.render("no-secrets");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                res.status(500).send("Internal Server Error");
+            });
     } else {
+        // User is not authenticated, redirect to login
         res.redirect("/login");
     }
 });
 
-app.get("/secrets", function(req, res) {
-    User.find({"secret": {$ne: null}})
-        .then(foundUsers => {
-            if (foundUsers && foundUsers.length > 0) {
-                res.render("secrets", {usersWithSecrets: foundUsers});
-            } else {
-                // No users with non-null secrets found
-                res.render("no-secrets");
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            res.status(500).send("Internal Server Error");
-        });
-});
 
 
 
