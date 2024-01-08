@@ -96,6 +96,14 @@ app.get("/register", function(req, res){
     res.render("register");
 });
 
+app.get("/secrets", function(req, res){
+    if (req.isAuthenticated()){
+        res.render("secrets");
+    } else {
+        res.redirect("/login");
+    }
+});
+
 app.get("/secrets", function(req, res) {
     User.find({"secret": {$ne: null}})
         .then(foundUsers => {
@@ -124,7 +132,6 @@ app.get("/submit", function(req, res){
 
 app.post("/submit", function(req, res) {
     const submittedSecret = req.body.secret;
-
 
     console.log(req.user.id);
 
