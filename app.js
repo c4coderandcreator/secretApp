@@ -6,8 +6,8 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const findOrCreate = require('mongoose-findorcreate')
+const GoogleStrategy = require('passport-google-oauth20').Strategy; // Taken from passportjs site
+const findOrCreate = require('mongoose-findorcreate') //to fix find or create thing for the user step 2
 
 const app = express();
 
@@ -30,17 +30,19 @@ mongoose.connect(`${process.env.URL}`);
 const userSchema = new mongoose.Schema ({
     email: String,
     password: String,
-    googleId: String,
-    secret: String
+    googleId: String, // step 6 add in db for verification
+    secret: String    // add in
 });
 
 userSchema.plugin(passportLocalMongoose);
-userSchema.plugin(findOrCreate);
+userSchema.plugin(findOrCreate); //step 3
 
 const User = new mongoose.model("User", userSchema);
 
 passport.use(User.createStrategy());
 
+
+// step 5 replace passport-local mongoose ser.liz deser.liz to new one in congigure section passportjs docs 37:05
 passport.serializeUser(function(user, cb) {
     process.nextTick(function() {
       return cb(null, {
@@ -57,16 +59,18 @@ passport.serializeUser(function(user, cb) {
     });
   });
 
+
+  //1st step , Taken from from passportjs 19:36
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
     callbackURL: "https://secrets-la4e.onrender.com/auth/google/secrets",
-    userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
+    userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo" //taken from github 22:40
   },
   function(accessToken, refreshToken, profile, cb) {
     console.log(profile);
 
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+    User.findOrCreate({ googleId: profile.id }, function (err, user) { //relates to step2
       return cb(err, user);
     });
   }
@@ -77,11 +81,11 @@ app.get("/", function(req, res){
     res.render("home");
 });
 
-app.get('/auth/google',
+app.get('/auth/google',  //step 4 , create this route 30:17 refer docs
   passport.authenticate('google', { scope: ['profile'] })
   );
 
-  app.get('/auth/google/secrets', 
+  app.get('/auth/google/secrets', // step 5 add this route 32:45, change callbacks to secrets route
   passport.authenticate('google', { failureRedirect: '/login' }),
   function(req, res) {
     // Successful authentication, redirect home.
@@ -96,6 +100,8 @@ app.get("/register", function(req, res){
     res.render("register");
 });
 
+
+//step 7 for rendering secrets for the authencated / registered user only
 app.get("/secrets", function(req, res) {
     if (req.isAuthenticated()) {
         // User is authenticated, retrieve and render secrets
